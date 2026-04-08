@@ -21,26 +21,21 @@ for( let i = 0; i < size; i+=2 ) { //traversing two first one is A and second is
   state [i+1] = 0; 
 } 
 
-
-/*
-for( let i = 0; i < size/1000; i+=2 ) { //traversing two first one is A and second is B
-  state[ i ] = 1;   //why is the last half row blank?
-  state [i+1] = 1; 
-} 
-*/
 console.log(state[0]+", " + state[1]+", " + state[2]+ ", " + state[3])
 
 
 //set intial b's
-const midpoint = 2*(Math.floor(window.innerWidth/2) + Math.floor(window.innerHeight *window.innerWidth/2));
-console.log("midpoint: " + midpoint);
-state[midpoint+1] = 1; 
-for(let i = -5; i <5; i++){
 
-    state[midpoint+(i*2-1)] = 1; 
+let startSeed =5;
 
+for (let y = Math.floor(window.innerHeight/2) - startSeed; y < Math.floor(window.innerHeight/2) + startSeed; y++){
+    for (let x = Math.floor(window.innerWidth/2) - startSeed; x< Math.floor(window.innerWidth/2) + startSeed; x++){
+        let array_pos = (y * window.innerWidth + x)
+        state[(2*array_pos)+1] = 1;
+
+        
+    }
 }
-
 
 
 //set up actual buffers
@@ -66,4 +61,4 @@ const computePass = sg.compute({
   dispatchCount:  [Math.floor(gulls.width / 8), Math.floor(gulls.height/8), 1],
 })
 
-sg.run( renderPass )
+sg.run(computePass, renderPass )

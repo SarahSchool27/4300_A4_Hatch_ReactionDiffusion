@@ -3,16 +3,13 @@
 
 @fragment 
 fn fs( @builtin(position) pos : vec4f ) -> @location(0) vec4f {
-    let idx : u32 = u32( 2*(pos.y * res.x + pos.x)); //why minus one?
-
+        //casting to u32 is important to remove float math errors
+    let idx : u32 =  2* (u32(pos.y) * u32(res.x) + u32(pos.x)); 
+        
 
     let v = state[ idx ];
     let b = state[idx+1];
 
-    var c = 0.0;
-    if(pos.x < 4 && pos.x >2){
-        c = 1.0;
-    }
 
-    return vec4f(v,0.0,c, 1.);
+    return vec4f(v,b,0.0, 1.);
 }
