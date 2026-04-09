@@ -1,18 +1,16 @@
 @group(0) @binding(0) var<uniform> res: vec2f;
-@group(0) @binding(1) var<storage> statein: array<f32>;
-@group(0) @binding(2) var<storage, read_write> stateout: array<f32>;
+@group(0) @binding(1) var<storage> stateinA: array<f32>;
+@group(0) @binding(2) var<storage, read_write> stateoutA: array<f32>;
+@group(0) @binding(3) var<storage> stateinB: array<f32>;
+@group(0) @binding(4) var<storage, read_write> stateoutB: array<f32>;
 
 fn index( x:i32, y:i32 ) -> u32 {
   let _res = vec2i(res);
-  return 2* u32( (y % _res.y) * _res.x + ( x % _res.x ) );
+  return u32( (y % _res.y) * _res.x + ( x % _res.x ) );
 }
 
-fn indexB( x:i32, y:i32 ) -> u32 {
-  let _res = vec2i(res);
-  return (2*u32((y % _res.y) * _res.x + ( x % _res.x ) )) + 1;
-}
 
-fn laplacianKernel(center:vec3i, isModeB: bool) -> u32{
+fn laplacianKernel(center:vec3i, isModeB: bool) -> f32{
   
   let lapacian = array<f32, 9>(
     0.05, 0.2, 0.05,
@@ -20,21 +18,41 @@ fn laplacianKernel(center:vec3i, isModeB: bool) -> u32{
     0.05, 0.2, 0.05
   );
 
-  let modifierForB = u32(isModeB);
-  
-  let sum = lapacian[0] * statein[ index(center.x - 1, center.y - 1)               + modifierForB] +
-                        lapacian[1] *statein[ index(center.x - 1, center.y)        + modifierForB] +
-                        lapacian[2] *statein[ index(center.x - 1, center.y + 1)    + modifierForB] +
+  if(!isModeB){
 
-                        lapacian[3] *statein[ index(center.x, center.y - 1)        + modifierForB] +
-                        lapacian[4] *statein[ index(center.x, center.y)            + modifierForB] +
-                        lapacian[4] *statein[ index(center.x, center.y + 1)        + modifierForB] +
+    let sum = lapacian[0] * stateinA[ index(center.x-1, center.y - 1)] +
+                        lapacian[1] *stateinA[ index(center.x, center.y - 1)] +
+                        lapacian[2] *stateinA[ index(center.x + 1, center.y - 1) ] +
 
-                        lapacian[5] *statein[ index(center.x + 1, center.y - 1)    + modifierForB] +
-                        lapacian[6] *statein[ index(center.x + 1, center.y)        + modifierForB] +
-                        lapacian[7] *statein[ index(center.x + 1, center.y + 1)    + modifierForB];
+                        lapacian[3] *stateinA[ index(center.x-1, center.y)  ] +
+                        lapacian[4] *stateinA[ index(center.x, center.y) ] +
+                        lapacian[5] *stateinA[ index(center.x +1, center.y) ] +
 
-  return u32(sum);
+                        lapacian[6] *stateinA[ index(center.x - 1, center.y + 1)] +
+                        lapacian[7] *stateinA[ index(center.x, center.y + 1 )] +
+                        lapacian[8] *stateinA[ index(center.x + 1, center.y + 1)];
+
+    return f32(sum);
+
+  } else{
+
+    let sum = lapacian[0] * stateinB[ index(center.x-1, center.y - 1)] +
+                        lapacian[1] *stateinB[ index(center.x, center.y - 1)] +
+                        lapacian[2] *stateinB[ index(center.x + 1, center.y - 1) ] +
+
+                        lapacian[3] *stateinB[ index(center.x-1, center.y)  ] +
+                        lapacian[4] *stateinB[ index(center.x, center.y) ] +
+                        lapacian[5] *stateinB[ index(center.x +1, center.y) ] +
+
+                        lapacian[6] *stateinB[ index(center.x - 1, center.y + 1)] +
+                        lapacian[7] *stateinB[ index(center.x, center.y + 1 )] +
+                        lapacian[8] *stateinB[ index(center.x + 1, center.y + 1)];
+
+
+    return f32(sum);
+
+
+  }
 }
 
 
@@ -49,16 +67,27 @@ fn cs( @builtin(global_invocation_id) _cell:vec3u ) {
   let f = 0.055;
   let k = 0.0; //0.062;
 
-  let A = statein[index(cell.x, cell.y)];
-  let B = statein[indexB(cell.x, cell.y)];
+  let A = stateinA[index(cell.x, cell.y)];
+  let B = stateinB[index(cell.x, cell.y)];
    
-  let a_lap = f32(laplacianKernel(cell, false));
-  let b_lap = f32(laplacianKernel(cell, true));
+  let a_lap = laplacianKernel(cell, false);
+  let b_lap = laplacianKernel(cell, true);
 
-  let newA = A + DA * a_lap- A * B*B - f*(1-A);
-  let newB = B + DB * b_lap + A * B*B - ((k+f)*B);
+  let newA =clamp(
+            (A 
+            + (DA * a_lap) 
+            - (A * B*B) 
+            - (f*(1-A))
+            ), 0,1);
+
+  let newB =clamp(
+            (B 
+            + (DB * b_lap )
+            + (A * B*B)
+            - ((k+f)*B)
+            ), 0,1);
   
-  stateout[index(cell.x, cell.y)] = newA;
-  stateout[indexB(cell.x, cell.y)] = newB; 
+  stateoutA[index(cell.x, cell.y)] = newA;
+  stateoutB[index(cell.x, cell.y)] = newB; 
 
 }
