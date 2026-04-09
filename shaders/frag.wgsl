@@ -7,9 +7,10 @@ fn fs( @builtin(position) pos : vec4f ) -> @location(0) vec4f {
     let idx : u32 =  2* (u32(pos.y) * u32(res.x) + u32(pos.x)); 
         
 
-    let v = state[ idx ];
+    let a = state[ idx ];
     let b = state[idx+1];
 
+    let color = vec3f(clamp(floor(a-b),0,1));
 
-    return vec4f(v,b,0.0, 1.);
+    return vec4f(color, 1.);
 }

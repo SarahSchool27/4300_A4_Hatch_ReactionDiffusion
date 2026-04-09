@@ -5,7 +5,8 @@ import { default as Mouse    } from './gulls/mouse.js'
 import {Pane} from 'https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js';
         
 
-const sg      = await gulls.init(),
+const sg      = await gulls.init(), 
+            //gulls.init(false) will NOT resize the canvas, need to resize canvas manually externally
       frag    = await gulls.import( './shaders/frag.wgsl' ),
       compute = await gulls.import( 'shaders/compute_reactionDiffusion.wgsl'),
       render  = gulls.constants.vertex + frag,
@@ -26,7 +27,7 @@ console.log(state[0]+", " + state[1]+", " + state[2]+ ", " + state[3])
 
 //set intial b's
 
-let startSeed =5;
+let startSeed =10;
 
 for (let y = Math.floor(window.innerHeight/2) - startSeed; y < Math.floor(window.innerHeight/2) + startSeed; y++){
     for (let x = Math.floor(window.innerWidth/2) - startSeed; x< Math.floor(window.innerWidth/2) + startSeed; x++){
@@ -36,7 +37,12 @@ for (let y = Math.floor(window.innerHeight/2) - startSeed; y < Math.floor(window
         
     }
 }
-
+/*
+//rand init buffer values
+for( let i = 0; i < size; i+=2 ) { //traversing two first one is A and second is B
+  state[ i ] = Math.random(1);   //why is the last half row blank?
+  state [i+1] =  Math.random(1); 
+} */
 
 //set up actual buffers
 const statebuffer1 = sg.buffer( state )
