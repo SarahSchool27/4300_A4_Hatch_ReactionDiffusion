@@ -65,7 +65,7 @@ fn cs( @builtin(global_invocation_id) _cell:vec3u ) {
   let DA = 1.0;
   let DB = 0.5;
   let f = 0.055;
-  let k = 0.0; //0.062;
+  let k = 0.062;
 
   let A = stateinA[index(cell.x, cell.y)];
   let B = stateinB[index(cell.x, cell.y)];
@@ -77,7 +77,7 @@ fn cs( @builtin(global_invocation_id) _cell:vec3u ) {
             (A 
             + (DA * a_lap) 
             - (A * B*B) 
-            - (f*(1-A))
+            + (f*(1-A))
             ), 0,1);
 
   let newB =clamp(

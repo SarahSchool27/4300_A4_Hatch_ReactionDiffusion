@@ -14,7 +14,7 @@ fn fs( @builtin(position) pos : vec4f ) -> @location(0) vec4f {
     let a = stateA[ idx ];
     let b = stateB[ idx ];
 
-    var color = vec3f(floor(a-b));
+    var color = vec3f((a-b));
     //color = vec3f(b);
 
     return vec4f(color, 1.);
